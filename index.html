@@ -33,6 +33,13 @@
     }
     .logo { font-weight: 800; font-size: 18px; color: #C1272D; letter-spacing: -0.3px; }
     .header-sub { font-size: 13px; color: #888; }
+    .print-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #C1272D; color: #fff; font-size: 13px; font-weight: 700;
+      padding: 8px 20px; border-radius: 50px; border: none; cursor: pointer;
+      font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; transition: background 0.15s;
+    }
+    .print-btn:hover { background: #A52025; }
 
     /* ── MAIN WRAPPER ── */
     .page-wrapper {
@@ -93,6 +100,19 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
+    .print-instructions {
+      background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px;
+      padding: 14px 18px; margin-top: 24px; font-size: 14px; color: #166534; line-height: 1.65;
+    }
+    .print-instructions strong { color: #15803d; }
+
+    /* ── PRINT-CAPTURE VALUES ──
+       Every pw-textarea / pw-input / pw-select gets a paired .print-value element.
+       On screen it stays hidden; right before printing, JS copies the field's
+       current value into it in full (no height/scroll limits) so nothing typed
+       gets clipped in the PDF. */
+    .print-value { display: none; }
+
     /* ── PRINT STYLES ── */
     @media print {
       body { background: #fff; font-size: 13px; }
@@ -101,7 +121,29 @@
       .pw-section { break-inside: avoid; page-break-inside: avoid; box-shadow: none; }
       .page-wrapper { padding: 0; max-width: 100%; }
       .print-header { display: block !important; }
-      .pw-textarea, .pw-input { border: 1px solid #ccc; }
+      .print-instructions { display: none; }
+
+      /* Hide the live, height-limited form controls in print... */
+      .pw-textarea, .pw-input, .pw-select { display: none !important; }
+
+      /* ...and show the fully-expanded static copy instead. */
+      .print-value {
+        display: block !important;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        border: 1px solid #ccc;
+        border-radius: 7px;
+        padding: 10px 13px;
+        font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+        font-size: 13px;
+        line-height: 1.55;
+        color: #222;
+        background: #fff;
+        min-height: 18px;
+      }
+      .print-value.empty { color: #999; font-style: italic; }
+      .print-value.select-value { display: inline-block !important; margin-left: 6px; padding: 4px 10px; }
     }
 
     .print-header {
@@ -120,6 +162,7 @@
     <div class="site-header-inner">
       <span class="logo">CompTIA</span>
       <span class="header-sub">AutoOps+ Sales Enablement · Proficiency Worksheet</span>
+      <button class="print-btn" id="save-pdf-btn" type="button">Save as PDF</button>
     </div>
   </header>
 
@@ -142,8 +185,7 @@
       <p style="font-size:15px;color:#555;line-height:1.7;margin-bottom:14px">
         Complete all four parts, then save your worksheet as a PDF and submit it using
         <a href="https://app.smartsheet.com/b/form/4c5f386bf6674cb59949bd916a95c497" target="_blank" rel="noopener noreferrer">this form</a>.
-        Allow 15–20 minutes. All fields save in your browser
-        session — download before closing.</p>
+        Allow 15–20 minutes.</p>
 
       <!-- Name / Date / Role -->
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px" class="pw-no-print">
@@ -181,7 +223,7 @@
             <div style="font-size:14px;font-weight:600;color:#222;margin-bottom:6px;line-height:1.55">
               A customer asks whether AutoOps+ includes CertMaster Learn. How do you respond —
               and how do you redirect the conversation to the right product?</div>
-            <textarea class="pw-textarea" placeholder="Write your response here…"></textarea>
+            <textarea class="pw-textarea" id="q1_1" placeholder="Write your response here…"></textarea>
           </div>
 
           <div style="margin-bottom:18px">
@@ -190,7 +232,7 @@
             <div style="font-size:14px;font-weight:600;color:#222;margin-bottom:6px;line-height:1.55">
               A customer asks: "What does AutoOps+ actually cover?" Give a concise 3–4 sentence
               answer you would use in a real customer conversation.</div>
-            <textarea class="pw-textarea" placeholder="Write your response here…"></textarea>
+            <textarea class="pw-textarea" id="q1_2" placeholder="Write your response here…"></textarea>
           </div>
 
           <div>
@@ -199,7 +241,7 @@
             <div style="font-size:14px;font-weight:600;color:#222;margin-bottom:6px;line-height:1.55">
               What makes AutoOps+ an "expansion certification" — and how does that format
               difference translate into a selling point?</div>
-            <textarea class="pw-textarea" placeholder="Write your response here…"></textarea>
+            <textarea class="pw-textarea" id="q1_3" placeholder="Write your response here…"></textarea>
           </div>
         </div>
       </div>
@@ -231,7 +273,7 @@
             <div style="font-size:14px;font-weight:600;color:#222;margin-bottom:6px;line-height:1.55">
               What is your recommended approach — which product(s), which differentiator to lead
               with, and how you'd open the conversation?</div>
-            <textarea class="pw-textarea" placeholder="Write your response here…"></textarea>
+            <textarea class="pw-textarea" id="q2_1" placeholder="Write your response here…"></textarea>
           </div>
 
           <div style="margin-bottom:18px">
@@ -249,7 +291,7 @@
             <div style="font-size:14px;font-weight:600;color:#222;margin-bottom:6px;line-height:1.55">
               How do you respond to Sandra's 8140 question — and what's your next step to keep
               this opportunity moving before her budget deadline?</div>
-            <textarea class="pw-textarea" placeholder="Write your response here…"></textarea>
+            <textarea class="pw-textarea" id="q2_2" placeholder="Write your response here…"></textarea>
           </div>
 
           <div style="margin-bottom:18px">
@@ -267,7 +309,7 @@
             <div style="font-size:14px;font-weight:600;color:#222;margin-bottom:6px;line-height:1.55">
               How do you position AutoOps+ for Dana — and which product or bundle would you
               recommend for her student profile?</div>
-            <textarea class="pw-textarea" placeholder="Write your response here…"></textarea>
+            <textarea class="pw-textarea" id="q2_3" placeholder="Write your response here…"></textarea>
           </div>
 
           <div>
@@ -285,7 +327,7 @@
             <div style="font-size:14px;font-weight:600;color:#222;margin-bottom:6px;line-height:1.55">
               How do you address Derek's concern about CertMaster Learn — and what does an
               AutoOps+ ILT solution look like for his business?</div>
-            <textarea class="pw-textarea" placeholder="Write your response here…"></textarea>
+            <textarea class="pw-textarea" id="q2_4" placeholder="Write your response here…"></textarea>
           </div>
         </div>
       </div>
@@ -307,28 +349,28 @@
               them to a skeptical enterprise buyer — 1 (first) to 4 (last).</div>
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px">
               <div style="display:flex;align-items:center;gap:10px">
-                <select class="pw-select" style="max-width:80px">
+                <select class="pw-select" id="seq_interactives" style="max-width:80px">
                   <option value="">—</option>
                   <option>1</option><option>2</option><option>3</option><option>4</option>
                 </select>
                 <span style="font-size:14px;color:#333">Interactives</span>
               </div>
               <div style="display:flex;align-items:center;gap:10px">
-                <select class="pw-select" style="max-width:80px">
+                <select class="pw-select" id="seq_ai_scenario" style="max-width:80px">
                   <option value="">—</option>
                   <option>1</option><option>2</option><option>3</option><option>4</option>
                 </select>
                 <span style="font-size:14px;color:#333">AI Scenario Activities</span>
               </div>
               <div style="display:flex;align-items:center;gap:10px">
-                <select class="pw-select" style="max-width:80px">
+                <select class="pw-select" id="seq_sim_labs" style="max-width:80px">
                   <option value="">—</option>
                   <option>1</option><option>2</option><option>3</option><option>4</option>
                 </select>
                 <span style="font-size:14px;color:#333">Simulation Labs</span>
               </div>
               <div style="display:flex;align-items:center;gap:10px">
-                <select class="pw-select" style="max-width:80px">
+                <select class="pw-select" id="seq_vm_labs" style="max-width:80px">
                   <option value="">—</option>
                   <option>1</option><option>2</option><option>3</option><option>4</option>
                 </select>
@@ -337,7 +379,7 @@
             </div>
             <div style="font-size:14px;font-weight:600;color:#222;margin-bottom:6px">
               Explain your sequencing logic in 2–3 sentences.</div>
-            <textarea class="pw-textarea" style="min-height:60px"
+            <textarea class="pw-textarea" id="q3_1_explain" style="min-height:60px"
               placeholder="Write your explanation here…"></textarea>
           </div>
 
@@ -351,7 +393,7 @@
               <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                 <div style="flex:1;min-width:220px;font-size:14px;color:#333;font-style:italic">
                   "My team learns by doing, not watching videos."</div>
-                <select class="pw-select" style="flex:1;min-width:160px">
+                <select class="pw-select" id="match_1" style="flex:1;min-width:160px">
                   <option value="">Select feature</option>
                   <option>Interactives</option><option>AI Scenario Activities</option>
                   <option>Simulation Labs</option><option>VM Labs</option>
@@ -360,7 +402,7 @@
               <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                 <div style="flex:1;min-width:220px;font-size:14px;color:#333;font-style:italic">
                   "I want my staff to develop judgment, not just recall answers."</div>
-                <select class="pw-select" style="flex:1;min-width:160px">
+                <select class="pw-select" id="match_2" style="flex:1;min-width:160px">
                   <option value="">Select feature</option>
                   <option>Interactives</option><option>AI Scenario Activities</option>
                   <option>Simulation Labs</option><option>VM Labs</option>
@@ -369,7 +411,7 @@
               <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                 <div style="flex:1;min-width:220px;font-size:14px;color:#333;font-style:italic">
                   "We can't provision lab infrastructure for every student."</div>
-                <select class="pw-select" style="flex:1;min-width:160px">
+                <select class="pw-select" id="match_3" style="flex:1;min-width:160px">
                   <option value="">Select feature</option>
                   <option>Interactives</option><option>AI Scenario Activities</option>
                   <option>Simulation Labs</option><option>VM Labs</option>
@@ -386,7 +428,7 @@
               skills — not just test-taking ability." Using the Story Structure Framework, write
               a 3–4 sentence product story framing for AutoOps+ in this context. Apply the
               framework to any vertical you choose.</div>
-            <textarea class="pw-textarea" style="min-height:100px"
+            <textarea class="pw-textarea" id="q3_3" style="min-height:100px"
               placeholder="Write your story framing here — include Story Purpose, Narrative Thread, and at least one point with Clear Context…"></textarea>
           </div>
         </div>
@@ -438,7 +480,7 @@
                   adding AutoOps+ to their catalog?</div>
               </div>
             </div>
-            <textarea class="pw-textarea" style="min-height:100px"
+            <textarea class="pw-textarea" id="q4_1" style="min-height:100px"
               placeholder="Write your response here — indicate which version you're answering…"></textarea>
           </div>
 
@@ -475,7 +517,7 @@
                   dropping the course from their catalog. How do you keep the relationship and the deal?</div>
               </div>
             </div>
-            <textarea class="pw-textarea" style="min-height:100px"
+            <textarea class="pw-textarea" id="q4_2" style="min-height:100px"
               placeholder="Write your response here — indicate which version you're answering…"></textarea>
           </div>
         </div>
@@ -489,30 +531,77 @@
           <span style="font-size:15px;font-weight:800;color:#fff;margin-left:8px">Review &amp; Download</span>
         </div>
         <div style="padding:18px 20px;background:#fff">
-          <p style="font-size:14px;color:#555;line-height:1.6;margin-bottom:14px">
-            Review your responses above, then save your completed worksheet as a PDF and upload
-            it using <a href="https://app.smartsheet.com/b/form/4c5f386bf6674cb59949bd916a95c497" target="_blank" rel="noopener noreferrer">this form</a>.
-            Results will be shared within 5 business days.</p>
-          <div style="background:#1a1a2e;border-radius:8px;padding:16px 20px;
-            display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
-            <div>
-              <div style="font-size:14px;font-weight:700;color:#fff">
-                AutoOps+ Sales Enablement Proficiency Worksheet</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.6)">
-                CompTIA · Revenue Enablement ·
-                <span id="pw-dl-name">Your Name</span> ·
-                <span id="pw-dl-date">Date</span>
-              </div>
+          <div style="background:#1a1a2e;border-radius:8px;padding:16px 20px;margin-bottom:14px">
+            <div style="font-size:14px;font-weight:700;color:#fff">
+              AutoOps+ Sales Enablement Proficiency Worksheet</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6)">
+              CompTIA · Revenue Enablement ·
+              <span id="pw-dl-name">Your Name</span> ·
+              <span id="pw-dl-date">Date</span>
             </div>
-            <div style="background:#F5F5F5;border:1px solid #e5e7eb;border-radius:8px;padding:12px 18px;font-family:'Inter',sans-serif;font-size:14px;color:#444444;line-height:1.6">
-  💡 <strong style="color:#222222">To save your worksheet:</strong> Press <strong style="color:#222222">Ctrl+P</strong> (Windows) or <strong style="color:#222222">Cmd+P</strong> (Mac) — then select <strong style="color:#222222">Save as PDF</strong> from the print dialog.
-</div>
+          </div>
+
+          <div class="print-instructions">
+            <strong>To save your completed worksheet as PDF:</strong> Click the <strong>Save as PDF</strong> button at the top of the page, or press <strong>Ctrl+P</strong> (Windows) / <strong>Cmd+P</strong> (Mac) and select <strong>Save as PDF</strong> as the destination. All responses on this page will be captured. Then upload and submit your proficiency worksheet using <a href="https://app.smartsheet.com/b/form/4c5f386bf6674cb59949bd916a95c497" target="_blank" rel="noopener noreferrer">this form</a>. Results will be shared within 5 business days.
           </div>
         </div>
       </div>
 
     </div><!-- /inner div -->
   </main>
+
+<script>
+/* ── PRINT CAPTURE ──
+   Right before the page prints, copy the live value of every textarea,
+   text input, and select into a plain static element placed right after
+   it. That static copy has no fixed height and no scrolling, so the full
+   text — no matter how long — is guaranteed to appear in the printed PDF.
+   The live controls are hidden in print via CSS; the static copies are
+   shown only in print via CSS. Nothing changes on screen. */
+function getOrCreatePrintValue(el, extraClass) {
+  var pv = el.nextElementSibling;
+  if (!pv || !pv.classList || !pv.classList.contains('print-value')) {
+    pv = document.createElement('div');
+    pv.className = 'print-value' + (extraClass ? ' ' + extraClass : '');
+    el.parentNode.insertBefore(pv, el.nextSibling);
+  }
+  return pv;
+}
+
+function captureAllFieldsForPrint() {
+  document.querySelectorAll('textarea.pw-textarea, input.pw-input').forEach(function (el) {
+    var pv = getOrCreatePrintValue(el);
+    var val = (el.value || '').trim();
+    if (val.length) {
+      pv.textContent = val;
+      pv.classList.remove('empty');
+    } else {
+      pv.textContent = '(No response provided)';
+      pv.classList.add('empty');
+    }
+  });
+
+  document.querySelectorAll('select.pw-select').forEach(function (el) {
+    var pv = getOrCreatePrintValue(el, 'select-value');
+    var val = el.value;
+    if (val && val.length) {
+      pv.textContent = val;
+      pv.classList.remove('empty');
+    } else {
+      pv.textContent = '(Not answered)';
+      pv.classList.add('empty');
+    }
+  });
+}
+
+// Catch every path to printing: the button, Ctrl/Cmd+P, and the browser's
+// native beforeprint event (covers Firefox/Safari print-preview flows too).
+window.addEventListener('beforeprint', captureAllFieldsForPrint);
+document.getElementById('save-pdf-btn').addEventListener('click', function () {
+  captureAllFieldsForPrint();
+  window.print();
+});
+</script>
 
 </body>
 </html>
